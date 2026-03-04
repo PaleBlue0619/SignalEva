@@ -1,4 +1,31 @@
 {
-  "callBackDays": [5,10,20,60],
-  "afterStatDays": [[3],[5,7],[5,10],[5,10,15,20,30]]
+  "factor": {
+    "dbName": "dfs://daySignalFut",
+    "tbName": "pt",
+    "dateCol": "tradeDate",
+    "symbolCol": "symbol",
+    "indicatorCol": "factor",
+    "valueCol": "value",
+    "condition": "split(symbol,'.')[0] in ['CF','SR','TA','FG','RM','SM','SF','MA','CY','AP','CJ','UR','SA','PF','PK','SH','PX','A','M','C','B','Y','P','V','JD','FB','PP','CS','EG','RR','EB','PG','LH','LU','FU','RB','WR','BU','HC','SP','SS','AO','BR','SI','LC']"
+  },
+  "label": {
+    "dbName": "dfs://dayLabel",
+    "tbName": "futureLabel",
+    "dateCol": "tradeDate",
+    "labelDateCol": "minDate",
+    "symbolCol": "cont",
+    "indicatorCol": "label",
+    "valueCol": "value",
+    "condition": "split(cont, '.')[0] in ['CF','SR','TA','FG','RM','SM','SF','MA','CY','AP','CJ','UR','SA','PF','PK','SH','PX','A','M','C','B','Y','P','V','JD','FB','PP','CS','EG','RR','EB','PG','LH','LU','FU','RB','WR','BU','HC','SP','SS','AO','BR','SI','LC']"
+  },
+  "result": {
+    "dbName": "dfs://factorSignal",
+    "tbName": "pt"
+  },
+  "config": {
+    "startDate": "20210101",
+    "endDate": null,
+    "callBackDays": [5,10,20,60],
+    "afterStatDays": [[3],[5,7],[5,10],[5,10,15,20,30]]
+  }
 }
