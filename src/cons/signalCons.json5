@@ -26,6 +26,7 @@
     "startDate": "20210101",
     "endDate": null,
     "callBackDays": [5,10,20,60],
-    "afterStatDays": [[3],[5,7],[5,10],[5,10,15,20,30]]
+    "afterStatDays": [[3],[5,7],[5,10],[5,10,15,20,30]],
+    "barRetLabelName": "barRet" // 通过累乘计算区间收益率
   }
 }
