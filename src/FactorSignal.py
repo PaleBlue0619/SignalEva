@@ -7,10 +7,11 @@ project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 from src.entity.Source import Source
+from src.entity.Eva import Eva
 from src.entity.Result import Result,Stats
 from src.utils.utils import split_list
 
-class FactorSignal(Stats):
+class FactorSignal(Eva, Stats):
     def __init__(self, session: ddb.session):
         super().__init__(session)
 
@@ -23,6 +24,7 @@ class FactorSignal(Stats):
         SigObj.init(factorDict=cfg["factor"],
                     labelDict=cfg["label"],
                     resultDict=cfg["result"])
+        SigObj.initDef()  # 初始化函数定义
         if not signalList:
             signalList = SigObj.getFactorList()
         signalList_nested = split_list(l=signalList, k=10)
@@ -31,10 +33,10 @@ class FactorSignal(Stats):
         if not dropDB:
             SigObj.deleteSignalRes(signalList=signalList)
         for signalList in tqdm.tqdm(signalList_nested):
-            print(signalList)
+            SigObj.eva(signalList=signalList)
 
 if __name__ == "__main__":
     session = ddb.session("localhost", 8848, "admin", "123456")
     with open(r".\cons\signalCons.json5", "r", encoding="utf-8") as f:
         sigCfg = json5.load(f)
-    FactorSignal.run(cfg=sigCfg, signalList=None, dropDB=False)
+    FactorSignal.run(cfg=sigCfg, signalList=None, dropDB=True)

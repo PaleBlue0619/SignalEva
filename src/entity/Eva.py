@@ -9,25 +9,25 @@ class Eva(Result):
 
     def initDef(self):
         # 初始化信号评价计算函数
-        self.session.run("""
+        self.session.run(rf"""
         // 函数定义
-        def InsertData(DBName, TBName, data, batchsize){
+        def InsertData(DBName, TBName, data, batchsize){{
             // 预防Out of Memory，分批插入数据，batchsize为每次数据的记录数
             start_idx = 0
             end_idx = batchsize
             krow = rows(data)
-            do{
+            do{{
                 slice_data = data[start_idx:min(end_idx,krow),]
-                if (rows(slice_data)>0){
+                if (rows(slice_data)>0){{
                 loadTable(DBName, TBName).append!(slice_data);
                 print(end_idx);
-                }
+                }}
                 start_idx = start_idx + batchsize
                 end_idx = end_idx + batchsize
-            }while(start_idx < krow)
-        };
+            }}while(start_idx < krow)
+        }};
         
-        def signalStats(callBackDays, afterStatDays, signalDF){
+        def signalStats(callBackDays, afterStatDays, signalDF){{
             // 统计-1
             summaryStats = select symbol, tradeDate, factor, value, ret,
                 callBackDays as `period,
@@ -79,16 +79,18 @@ class Eva(Result):
             // unpivot
             keyColNames = ["symbol","tradeDate","factor","period"]
             valColNames = array(STRING,0)
-            for (i in columnNames(summaryStats)){
-                if (! (i in keyColNames) and !(i in ["ret", "value"])){
+            for (i in columnNames(summaryStats)){{
+                if (! (i in keyColNames) and !(i in ["ret", "value"])){{
                     valColNames.append!(string(i))
-                }
-            }
+                }}
+            }}
             summaryStats0 = unpivot(summaryStats, keyColNames=keyColNames,valueColNames=valColNames)
-        
+            InsertData("{self.resultDBName}", "{self.resultTBName}", summaryStats0, 1000000);
+            undef(`summaryStats0)
+            
             // 统计-2: 
             // K日涨跌幅
-            for (day in afterStatDays){
+            for (day in afterStatDays){{
                 // retData prepare
                 update summaryStats set mret = move(ret, callBackDays) context by factor,symbol
                 update summaryStats set retKD = mprod(1+mret, day)-1 context by factor,symbol
@@ -127,11 +129,10 @@ class Eva(Result):
                                 "retAvgNeg","upNumNeg","upRateNeg","downNumNeg","downRateNeg"
                                 ]+string(day)
                 summaryStats1 = unpivot(summaryStats, keyColNames=keyColNames1, valueColNames=valColNames1)
-                summaryStats0.append!(summaryStats1);
-            }
-            undef(`summaryStats`summaryStats1)
-            return summaryStats0
-        }
+                InsertData("{self.resultDBName}", "{self.resultTBName}", summaryStats1, 1000000);
+            }}
+            undef(`summaryStats1)
+        }}
         """)
 
     def eva(self, signalList: List[str]):
@@ -141,8 +142,8 @@ class Eva(Result):
         endDate = pd.Timestamp(self.endDate).strftime("%Y.%m.%d")
         self.session.run(rf"""
         // 参数配置
-        startDate = {self.startDate}
-        endDate = {self.endDate}
+        startDate = {startDate}
+        endDate = {endDate}
         callBackDays = 120
         afterStatDays = [3,4]
         barRetLabelName = "{self.barRetLabelName}"
@@ -159,10 +160,6 @@ class Eva(Result):
         signalDF = lj(signalDF, labelDF, `symbol`tradeDate)
         undef(`labelDF);
         
-        // 进行统计        
-        summaryStats = signalStats(callBackDays, afterStatDays, signalDF);
-        
-        // 插入至指定数据库
-        InsertData(factorDB, factorTB, summaryStats, 1000000);
-        undef(`signalDF`summaryStats);
+        // 进行统计 + 插入至指定数据库
+        signalStats(callBackDays, afterStatDays, signalDF);
         """)

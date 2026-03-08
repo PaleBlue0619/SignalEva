@@ -38,12 +38,12 @@ class Result(Source):
         if dropDB and self.session.existsDatabase(self.resultDBName):
             self.session.dropDatabase(self.resultDBName)
         if not self.session.existsTable(dbUrl=self.resultDBName, tableName=self.resultTBName):
-            colName = ["signal","symbol","tradeDate","period","after","indicator","value"]
-            colType = ["SYMBOL","SYMBOL","DATE","INT","INT","SYMBOL","DOUBLE"]
+            colName = ["symbol","tradeDate","signal","period","indicator","value"]
+            colType = ["SYMBOL","DATE","SYMBOL","INT","SYMBOL","DOUBLE"]
             self.session.run(f"""
             db=database("{self.resultDBName}",RANGE,2010.01M+(0..30)*12,engine="OLAP")
             schemaTb=table(1:0,{colName}, {colType});
-            t=db.createDimensionTable(table=schemaTb, tableName="{self.resultTBName}")
+            t=db.createPartitionedTable(table=schemaTb, tableName="{self.resultTBName}", partitionColumns="tradeDate")
             """)  # DolphinDB 维度表 - 信号结果数据库
 
 class Stats(Result):    # for SignalPlot
