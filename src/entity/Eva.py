@@ -135,28 +135,49 @@ class Eva(Result):
         }}
         """)
 
-    def eva(self, signalList: List[str]):
+    def eva(self, signalList: List[str], callBackDays: int, afterStatDays: List[int]):
         self.session.upload({"factorList": signalList})
         """初始化定义"""
         startDate = pd.Timestamp(self.startDate).strftime("%Y.%m.%d")
         endDate = pd.Timestamp(self.endDate).strftime("%Y.%m.%d")
         self.session.run(rf"""
         // 参数配置
-        startDate = {startDate}
-        endDate = {endDate}
-        callBackDays = 120
-        afterStatDays = [3,4]
-        barRetLabelName = "{self.barRetLabelName}"
-        realStartDate = temporalAdd(startDate, -callBackDays, "d")
-        realEndDate = endDate
-        factorDB = "{self.factorDBName}"
-        factorTB = "{self.factorTBName}"
-        labelDB = "{self.labelDBName}"
-        labelTB = "{self.labelTBName}"
-        
-        // 取数
-        signalDF = select symbol,tradeDate,factor,value from loadTable(factorDB,factorTB) where factor in factorList and (tradeDate between realStartDate and realEndDate) 
-        labelDF = select cont as symbol,tradeDate,value as ret from loadTable(labelDB,labelTB) where label == barRetLabelName and (tradeDate between realStartDate and realEndDate)
+        startDate = {startDate};
+        endDate = {endDate};
+        callBackDays = {callBackDays};
+        afterStatDays = {afterStatDays};
+        barRetLabelName = "{self.barRetLabelName}";
+        realStartDate = temporalAdd(startDate, -callBackDays, "d");
+        realEndDate = endDate;
+        factorDB = "{self.factorDBName}";
+        factorTB = "{self.factorTBName}";
+        labelDB = "{self.labelDBName}";
+        labelTB = "{self.labelTBName}";
+        """)
+
+        if self.factorCondition not in ["", None]:
+            self.session.run(f"""
+            signalDF = select symbol,tradeDate,factor,value from loadTable(factorDB,factorTB) 
+            where factor in factorList and (tradeDate between realStartDate and realEndDate) and {self.factorCondition}
+            """)
+        else:
+            self.session.run(f"""
+            signalDF = select symbol,tradeDate,factor,value from loadTable(factorDB,factorTB) 
+            where factor in factorList and (tradeDate between realStartDate and realEndDate)
+            """)
+        if self.labelCondition not in ["", None]:
+            self.session.run(f"""
+            labelDF = select cont as symbol,tradeDate,value as ret from loadTable(labelDB,labelTB) 
+            where label == barRetLabelName and (tradeDate between realStartDate and realEndDate) and {self.labelCondition}
+            """)
+        else:
+            self.session.run(f"""
+            labelDF = select cont as symbol,tradeDate,value as ret from loadTable(labelDB,labelTB) 
+                where label == barRetLabelName and (tradeDate between realStartDate and realEndDate)
+            """)
+
+        self.session.run("""
+        // 合并数据
         signalDF = lj(signalDF, labelDF, `symbol`tradeDate)
         undef(`labelDF);
         

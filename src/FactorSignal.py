@@ -33,7 +33,8 @@ class FactorSignal(Eva, Stats):
         if not dropDB:
             SigObj.deleteSignalRes(signalList=signalList)
         for signalList in tqdm.tqdm(signalList_nested):
-            SigObj.eva(signalList=signalList)
+            for callBackDays, afterStatDays in zip(SigObj.callBackDays, SigObj.afterStatDays):
+                SigObj.eva(signalList=signalList, callBackDays=callBackDays, afterStatDays=afterStatDays)
 
 if __name__ == "__main__":
     session = ddb.session("localhost", 8848, "admin", "123456")

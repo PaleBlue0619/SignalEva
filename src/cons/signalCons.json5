@@ -25,8 +25,8 @@
   "config": {
     "startDate": "20210101",
     "endDate": null,
-    "callBackDays": [5,10,20,60],
-    "afterStatDays": [[3],[5,7],[5,10],[5,10,15,20,30]],
+    "callBackDays": [120,180],
+    "afterStatDays": [[3,5,10],[3,5,10]],
     "barRetLabelName": "barRet" // 通过累乘计算区间收益率
   }
 }
