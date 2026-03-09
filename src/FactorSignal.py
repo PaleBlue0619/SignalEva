@@ -10,6 +10,7 @@ from src.entity.Source import Source
 from src.entity.Eva import Eva
 from src.entity.Result import Result,Stats
 from src.utils.utils import split_list
+pd.set_option('display.max_columns', None)
 
 class FactorSignal(Eva, Stats):
     def __init__(self, session: ddb.session):
@@ -36,8 +37,28 @@ class FactorSignal(Eva, Stats):
             for callBackDays, afterStatDays in zip(SigObj.callBackDays, SigObj.afterStatDays):
                 SigObj.eva(signalList=signalList, callBackDays=callBackDays, afterStatDays=afterStatDays)
 
+    @staticmethod
+    def givenPeriodAndSignalPlot(cfg: Dict[str, str]):
+        SigObj = FactorSignal(session)
+        SigObj.init(factorDict=cfg["factor"],
+                    labelDict=cfg["label"],
+                    resultDict=cfg["result"])
+        SigObj.setConfig(cfg["config"])
+        SigObj.Plot_(panelName="A")
+
+    @staticmethod
+    def givenPeriodAndSymbolPlot(cfg: Dict[str, str]):
+        SigObj = FactorSignal(session)
+        SigObj.init(factorDict=cfg["factor"],
+                    labelDict=cfg["label"],
+                    resultDict=cfg["result"])
+        SigObj.setConfig(cfg["config"])
+        SigObj.Plot_(panelName="B")
+
 if __name__ == "__main__":
     session = ddb.session("localhost", 8848, "admin", "123456")
-    with open(r".\cons\signalCons.json5", "r", encoding="utf-8") as f:
+    with open(r"D:\DolphinDB\Project\FactorSignal\src\cons\signalCons.json5", "r", encoding="utf-8") as f:
         sigCfg = json5.load(f)
-    FactorSignal.run(cfg=sigCfg, signalList=None, dropDB=True)
+    # FactorSignal.run(cfg=sigCfg, signalList=None, dropDB=True)
+    # FactorSignal.givenPeriodAndSignalPlot(cfg=sigCfg)
+    FactorSignal.givenPeriodAndSymbolPlot(cfg=sigCfg)
