@@ -92,7 +92,7 @@ class Eva(Result):
             // K日涨跌幅
             for (day in afterStatDays){{
                 // retData prepare
-                update summaryStats set mret = move(ret, callBackDays) context by factor,symbol
+                update summaryStats set mret = move(ret, -day) context by factor,symbol
                 update summaryStats set retKD = mprod(1+mret, day)-1 context by factor,symbol
                 
                 // retKD avg stats
