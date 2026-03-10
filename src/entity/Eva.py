@@ -93,21 +93,38 @@ class Eva(Result):
             for (day in afterStatDays){{
                 // retData prepare
                 update summaryStats set mret = move(ret, -day) context by factor,symbol
-                update summaryStats set retKD = mprod(1+mret, day)-1 context by factor,symbol
-                
+                if (day != 1){{
+                    update summaryStats set retKD = mprod(1+mret, day)-1 context by factor,symbol
+                }}else{{
+                    update summaryStats set retKD = mret;
+                }}
+                    
                 // retKD avg stats
                 // pos
-                update summaryStats set retAvgPos = double(nullFill((msum(iif(value == 1, 1, 0) * retKD, callBackDays)-msum(iif(value == 1, 1, 0) * retKD, day))\posNum,0)) context by factor, symbol 
-                update summaryStats set upNumPos = double(nullFill(msum(iif(value == 1 and retKD > 0, 1, 0), callBackDays)-msum(iif(value == 1 and retKD > 0, 1, 0), day),0)) context by factor, symbol
+                if (day != 1){{
+                    update summaryStats set retAvgPos = double(nullFill((msum(iif(value == 1, 1, 0) * retKD, callBackDays)-msum(iif(value == 1, 1, 0) * retKD, day))\posNum,0)) context by factor, symbol 
+                    update summaryStats set upNumPos = double(nullFill(msum(iif(value == 1 and retKD > 0, 1, 0), callBackDays)-msum(iif(value == 1 and retKD > 0, 1, 0), day),0)) context by factor, symbol
+                    update summaryStats set downNumPos = double(nullFill(msum(iif(value == 1 and retKD < 0, 1, 0), callBackDays)-msum(iif(value == 1 and retKD < 0, 1, 0), day),0)) context by factor, symbol
+                }}else{{
+                    update summaryStats set retAvgPos = double(nullFill((msum(iif(value == 1, 1, 0) * retKD, callBackDays)-iif(value == 1, 1, 0) * retKD)\posNum,0)) context by factor, symbol 
+                    update summaryStats set upNumPos = double(nullFill(msum(iif(value == 1 and retKD > 0, 1, 0), callBackDays)-iif(value == 1 and retKD > 0, 1, 0),0)) context by factor, symbol
+                    update summaryStats set downNumPos = double(nullFill(msum(iif(value == 1 and retKD < 0, 1, 0), callBackDays)-iif(value == 1 and retKD < 0, 1, 0),0)) context by factor, symbol
+                }}
                 update summaryStats set upRatePos = double(nullFill(upNumPos\posNum,0)) context by factor, symbol
-                update summaryStats set downNumPos = double(nullFill(msum(iif(value == 1 and retKD < 0, 1, 0), callBackDays)-msum(iif(value == 1 and retKD < 0, 1, 0), day),0)) context by factor, symbol
                 update summaryStats set downRatePos = double(nullFill(downNumPos\posNum,0)) context by factor, symbol
                 
                 // neg
-                update summaryStats set retAvgNeg = double(nullFill((msum(iif(value == -1, 1, 0) * retKD, callBackDays)-msum(iif(value == -1, 1, 0) * retKD, day))\negNum,0)) context by factor, symbol 
-                update summaryStats set upNumNeg = double(nullFill(msum(iif(value == -1 and retKD > 0, 1, 0), callBackDays)-msum(iif(value == -1 and retKD > 0, 1, 0), day),0)) context by factor, symbol
+                if (day != 1){{
+                    update summaryStats set retAvgNeg = double(nullFill((msum(iif(value == -1, 1, 0) * retKD, callBackDays)-msum(iif(value == -1, 1, 0) * retKD, day))\negNum,0)) context by factor, symbol 
+                    update summaryStats set upNumNeg = double(nullFill(msum(iif(value == -1 and retKD > 0, 1, 0), callBackDays)-msum(iif(value == -1 and retKD > 0, 1, 0), day),0)) context by factor, symbol
+                    update summaryStats set downNumNeg = double(nullFill(msum(iif(value == -1 and retKD < 0, 1, 0), callBackDays)-msum(iif(value == -1 and retKD < 0, 1, 0), day),0)) context by factor, symbol
+                }}
+                else{{
+                    update summaryStats set retAvgNeg = double(nullFill((msum(iif(value == -1, 1, 0) * retKD, callBackDays)-iif(value == -1, 1, 0) * retKD)\negNum,0)) context by factor, symbol 
+                    update summaryStats set upNumNeg = double(nullFill(msum(iif(value == -1 and retKD > 0, 1, 0), callBackDays)-iif(value == -1 and retKD > 0, 1, 0),0)) context by factor, symbol
+                    update summaryStats set downNumNeg = double(nullFill(msum(iif(value == -1 and retKD < 0, 1, 0), callBackDays)-iif(value == -1 and retKD < 0, 1, 0),0)) context by factor, symbol
+                }}
                 update summaryStats set upRateNeg = double(nullFill(upNumNeg\negNum,0)) context by factor, symbol
-                update summaryStats set downNumNeg = double(nullFill(msum(iif(value == -1 and retKD < 0, 1, 0), callBackDays)-msum(iif(value == -1 and retKD < 0, 1, 0), day),0)) context by factor, symbol
                 update summaryStats set downRateNeg = double(nullFill(downNumNeg\negNum,0)) context by factor, symbol
                 
                 // rename
