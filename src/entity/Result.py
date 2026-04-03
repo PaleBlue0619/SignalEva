@@ -41,9 +41,9 @@ class Result(Source):
             colName = ["symbol","tradeDate","signal","period","indicator","value"]
             colType = ["SYMBOL","DATE","SYMBOL","INT","SYMBOL","DOUBLE"]
             self.session.run(f"""
-            db=database("{self.resultDBName}",VALUE,2015.01.01..2030.01.01,engine="OLAP")
+            db=database("{self.resultDBName}",VALUE,2015.01.01..2030.01.01,engine="TSDB")
             schemaTb=table(1:0,{colName}, {colType});
-            t=db.createPartitionedTable(table=schemaTb, tableName="{self.resultTBName}", partitionColumns="tradeDate")
+            t=db.createPartitionedTable(table=schemaTb, tableName="{self.resultTBName}", partitionColumns="tradeDate", sortColumns=["symbol","signal","period"], keepDuplicates=LAST)
             """)  # DolphinDB 维度表 - 信号结果数据库
 
     def getSymbolList(self) -> List[str]:

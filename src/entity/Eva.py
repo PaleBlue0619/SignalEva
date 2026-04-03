@@ -85,7 +85,7 @@ class Eva(Result):
                 }}
             }}
             summaryStats0 = unpivot(summaryStats, keyColNames=keyColNames,valueColNames=valColNames)
-            InsertData("{self.resultDBName}", "{self.resultTBName}", summaryStats0, 1000000);
+            InsertData("{self.resultDBName}", "{self.resultTBName}", summaryStats0, 5000000);
             undef(`summaryStats0)
             
             // 统计-2: 
@@ -146,17 +146,17 @@ class Eva(Result):
                                 "retAvgNeg","upNumNeg","upRateNeg","downNumNeg","downRateNeg"
                                 ]+string(day)
                 summaryStats1 = unpivot(summaryStats, keyColNames=keyColNames1, valueColNames=valColNames1)
-                InsertData("{self.resultDBName}", "{self.resultTBName}", summaryStats1, 1000000);
+                InsertData("{self.resultDBName}", "{self.resultTBName}", summaryStats1, 5000000);
             }}
             undef(`summaryStats1)
         }}
         """)
 
-    def eva(self, signalList: List[str], callBackDays: int, afterStatDays: List[int]):
+    def eva(self, startDate: pd.Timestamp, endDate: pd.Timestamp, signalList: List[str], callBackDays: int, afterStatDays: List[int]):
         self.session.upload({"factorList": signalList})
         """初始化定义"""
-        startDate = pd.Timestamp(self.startDate).strftime("%Y.%m.%d")
-        endDate = pd.Timestamp(self.endDate).strftime("%Y.%m.%d")
+        startDate = pd.Timestamp(startDate).strftime("%Y.%m.%d")
+        endDate = pd.Timestamp(endDate).strftime("%Y.%m.%d")
         self.session.run(rf"""
         // 参数配置
         startDate = {startDate};
