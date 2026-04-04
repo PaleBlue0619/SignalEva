@@ -22,15 +22,6 @@ class Result(Source):
         self.afterStatDays = config["afterStatDays"]
         self.barRetLabelName = config["barRetLabelName"]
 
-    def deleteSignalRes(self, signalList: List[str]) -> None:
-        """
-        删除结果数据库中对应信号的结果
-        """
-        self.session.upload({"deleteSignals": signalList})
-        self.session.run(f"""
-        delete from loadTable("{self.resultDBName}", "{self.resultTBName}") where signal in deleteSignals;
-        """)
-
     def initResDB(self, dropDB: bool = False) -> None:
         """
         创建结果数据库
@@ -41,10 +32,10 @@ class Result(Source):
             colName = ["symbol","tradeDate","signal","period","indicator","value"]
             colType = ["SYMBOL","DATE","SYMBOL","INT","SYMBOL","DOUBLE"]
             self.session.run(f"""
-            db=database("{self.resultDBName}",VALUE,2015.01.01..2030.01.01,engine="TSDB")
+            db=database("{self.resultDBName}",VALUE,2015.01.01..2030.01.01,engine="OLAP")
             schemaTb=table(1:0,{colName}, {colType});
-            t=db.createPartitionedTable(table=schemaTb, tableName="{self.resultTBName}", partitionColumns="tradeDate", sortColumns=["symbol","signal","period"], keepDuplicates=LAST)
-            """)  # DolphinDB 维度表 - 信号结果数据库
+            t=db.createPartitionedTable(table=schemaTb, tableName="{self.resultTBName}", partitionColumns=["tradeDate"])
+            """)  # DolphinDB 分区表 - 信号结果数据库
 
     def getSymbolList(self) -> List[str]:
         """
@@ -53,23 +44,87 @@ class Result(Source):
         startDate = pd.Timestamp(self.startDate).strftime("%Y.%m.%d")
         endDate = pd.Timestamp(self.endDate).strftime("%Y.%m.%d")
         symbolDF = self.session.run(f"""
-            select count(*) from loadTable("{self.resultDBName}", "{self.resultTBName}")
-                where tradeDate between {startDate} and {endDate} group by symbol
-        """)
+             select count(*) from loadTable("{self.resultDBName}", "{self.resultTBName}")
+                 where tradeDate between {startDate} and {endDate} group by symbol
+         """)
         return symbolDF["symbol"].tolist()
 
     def getSignalList(self) -> List[str]:
         """
         获取当前结果数据库中信号列表
         """
-        startDate = pd.Timestamp(self.startDate).strftime("%Y.%m.%d")
-        endDate = pd.Timestamp(self.endDate).strftime("%Y.%m.%d")
         signalDF = self.session.run(f"""
-                    select count(*) from loadTable("{self.resultDBName}", "{self.resultTBName}")
-                        where tradeDate between {startDate} and {endDate} group by signal
-                """)
+                     select count(*) from loadTable("{self.resultDBName}", "{self.resultTBName}") group by signal
+                 """)
         return signalDF["signal"].tolist()
 
+    def getDateList(self) -> List[pd.Timestamp]:
+        """
+        获取当前库内所有时间, 返回列表
+        """
+        if self.factorCondition not in ["", None]:
+            factorDF = self.session.run(f"""
+                select count(*) from loadTable("{self.factorDBName}", "{self.factorTBName}")
+                    where {self.factorCondition}
+                    group by {self.factorDateCol} as tradeDate 
+            """)
+        else:
+            factorDF = self.session.run(f"""
+                select count(*) from loadTable("{self.factorDBName}", "{self.factorTBName}")
+                    group by {self.factorDateCol} as tradeDate
+            """)
+        dateList = [pd.Timestamp(i) for i in factorDF["tradeDate"].tolist()]
+        return dateList
+
+    def getDateRangeByFactor(self, factorList: List[str] = None) -> Dict[str, List[pd.Timestamp]]:
+        """
+        查看当前因子的起始时间, 返回每个因子起始时间组成的字典
+        :param factorList:
+        :return:
+        """
+        self.session.upload({"factorList": factorList})
+        if not factorList:
+            dateDF = self.session.run(f"""
+            select min(tradeDate) as minDate, max(tradeDate) as maxDate 
+                from loadTable("{self.resultDBName}","{self.resultTBName}")
+                group by signal
+            """)
+        else:
+            dateDF = self.session.run(f"""
+            select min(tradeDate) as minDate, max(tradeDate) as maxDate 
+                from loadTable("{self.resultDBName}","{self.resultTBName}")
+                where signal in {factorList}
+                group by signal
+            """)
+        dateDF["minDate"] = pd.to_datetime(dateDF["minDate"])
+        dateDF["maxDate"] = pd.to_datetime(dateDF["maxDate"])
+        resDict = {}
+        for _, row in dateDF.iterrows():
+            resDict[row["signal"]] = [row["minDate"], row["maxDate"]]
+        return resDict
+
+    def deleteByDate(self, startDate: str, endDate: str) -> None:
+        startDate = pd.Timestamp(startDate).strftime("%Y.%m.%d")
+        endDate = pd.Timestamp(endDate).strftime("%Y.%m.%d")
+        self.session.run(f"""
+        delete from loadTable("{self.resultDBName}","{self.resultTBName}") where tradeDate between {startDate} and {endDate}
+        """)
+
+    def deleteByFactorList(self, factorList: List[str]) -> None:
+        self.session.upload({"factorList": factorList})
+        self.session.run(f"""
+        delete from loadTable("{self.resultDBName}","{self.resultTBName}") where signal in factorList
+        """)
+
+    def deleteByDateAndFactorList(self, startDate: str, endDate: str, factorList: List[str]) -> None:
+        startDate = pd.Timestamp(startDate).strftime("%Y.%m.%d")
+        endDate = pd.Timestamp(endDate).strftime("%Y.%m.%d")
+        self.session.upload({"factorList": factorList})
+        self.session.run(f"""
+        startDate = {startDate}
+        endDate = {endDate}
+        delete from loadTable("{self.resultDBName}", "{self.resultTBName}") where signal in factorList and (tradeDate between startDate and endDate)
+        """)
 
 class Stats(Result):    # for SignalPlot
     def __init__(self, session: ddb.session):
