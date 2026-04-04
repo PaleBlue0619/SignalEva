@@ -12,7 +12,7 @@ from src.entity.Result import Result,Stats
 from src.utils.utils import split_list, get_splitTradeTime
 pd.set_option('display.max_columns', None)
 
-class FactorSignal(Eva, Stats):
+class SignalEva(Eva, Stats):
     def __init__(self, session: ddb.session):
         super().__init__(session)
 
@@ -23,7 +23,7 @@ class FactorSignal(Eva, Stats):
         dropDB: 是否删除原始数据库
         dropOri: 是否删除原始结果
         """
-        SigObj = FactorSignal(session)
+        SigObj = SignalEva(session)
         SigObj.init(factorDict=cfg["factor"],
                     labelDict=cfg["label"],
                     resultDict=cfg["result"])
@@ -86,6 +86,6 @@ if __name__ == "__main__":
     session = ddb.session("localhost", 8848, "admin", "123456")
     with open(r"D:\DolphinDB\Project\FactorSignal\src\cons\signalCons.json5", "r", encoding="utf-8") as f:
         sigCfg = json5.load(f)
-    FactorSignal.run(cfg=sigCfg, signalList=None, dropDB=True, window=30)
+    SignalEva.run(cfg=sigCfg, signalList=None, dropDB=False, window=30)
     # FactorSignal.givenPeriodAndSignalPlot(cfg=sigCfg)
     # FactorSignal.givenPeriodAndSymbolPlot(cfg=sigCfg)

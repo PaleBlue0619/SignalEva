@@ -86,7 +86,7 @@ class Eva(Result):
                 }}
             }}
             summaryStats0 = unpivot(summaryStats, keyColNames=keyColNames,valueColNames=valColNames)
-            InsertData("{self.resultDBName}", "{self.resultTBName}", summaryStats0, 1000000);
+            InsertData("{self.resultDBName}", "{self.resultTBName}", summaryStats0, 5000000);
             undef(`summaryStats0)
             
             // 统计-2: 
@@ -149,7 +149,7 @@ class Eva(Result):
                                 ]+string(day)
                 summaryStats1 = select * from unpivot(summaryStats, keyColNames=keyColNames1, valueColNames=valColNames1)
                                 where tradeDate between startDate and endDate
-                InsertData("{self.resultDBName}", "{self.resultTBName}", summaryStats1, 1000000);
+                InsertData("{self.resultDBName}", "{self.resultTBName}", summaryStats1, 5000000);
             }}
             undef(`summaryStats1)
         }}
