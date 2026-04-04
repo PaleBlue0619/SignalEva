@@ -43,7 +43,7 @@ class Eva(Result):
                 condDown3D = iif((move(ret,-1)<0 and move(ret,-2)<0 and move(ret,-3)<0), 1, 0)
                 from signalDF context by factor, symbol
                 order by symbol, tradeDate
-        
+            
             // pos
             update summaryStats set consUp1DNumPos = double(nullFill(msum(iif(condUp1D == 1 and value == 1, 1, 0), callBackDays)-iif(condUp1D == 1 and value == 1, 1, 0),0)) context by factor, symbol
             update summaryStats set consUp1DRatePos = double(nullFill(consUp1DNumPos\posNum,0.0))
@@ -85,7 +85,8 @@ class Eva(Result):
                     valColNames.append!(string(i))
                 }}
             }}
-            summaryStats0 = unpivot(summaryStats, keyColNames=keyColNames,valueColNames=valColNames)
+            summaryStats0 = select * from unpivot(summaryStats, keyColNames=keyColNames,valueColNames=valColNames)
+                            where tradeDate between startDate and endDate
             InsertData("{self.resultDBName}", "{self.resultTBName}", summaryStats0, 5000000);
             undef(`summaryStats0)
             

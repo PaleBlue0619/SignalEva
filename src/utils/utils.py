@@ -1,6 +1,6 @@
 import pandas as pd
 import dolphindb as ddb
-from typing import List
+from typing import List, Dict
 
 def split_list(l: List, k: int = 5) -> List[List]:
     """将列表进行切片, 长度不满的直接输出, 最终输出嵌套列表"""
@@ -16,3 +16,10 @@ def get_splitTradeTime(session: ddb.session,
     getMarketCalendar("XSHG",{startDate},{endDate})
     """)
     return split_list(l=dateList, k=window)
+
+def get_dateDictFromDF(dateDF: pd.DataFrame) -> Dict[pd.Timestamp, List[str]]:
+    """将pd.DataFrame(signal, minDate, maxDate) -> Dict(uniqueMaxDate, List[signal])
+    后续再接split_list分割
+    """
+    dateDict = dateDF.groupby("maxDate")["signal"].apply(list).to_dict()
+    return {pd.Timestamp(date): signalList for date, signalList in dateDict.items()}

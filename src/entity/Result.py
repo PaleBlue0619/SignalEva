@@ -17,7 +17,7 @@ class Result(Source):
     def setConfig(self, config: Dict):
         """初始化结果配置项"""
         self.startDate = pd.Timestamp(config["startDate"]) if config["startDate"] is not None else pd.Timestamp("20200101")
-        self.endDate = pd.Timestamp(config["endDate"]) if config["endDate"] is not None else pd.Timestamp.now().date()
+        self.endDate = pd.Timestamp(config["endDate"]) if config["endDate"] is not None else pd.Timestamp(pd.Timestamp.now().strftime("%Y.%m.%d"))
         self.callBackDays = config["callBackDays"]
         self.afterStatDays = config["afterStatDays"]
         self.barRetLabelName = config["barRetLabelName"]
@@ -76,7 +76,7 @@ class Result(Source):
         dateList = [pd.Timestamp(i) for i in factorDF["tradeDate"].tolist()]
         return dateList
 
-    def getDateRangeByFactor(self, factorList: List[str] = None) -> Dict[str, List[pd.Timestamp]]:
+    def getDateRangeByFactor(self, factorList: List[str] = None) -> pd.DataFrame:
         """
         查看当前因子的起始时间, 返回每个因子起始时间组成的字典
         :param factorList:
@@ -96,12 +96,9 @@ class Result(Source):
                 where signal in {factorList}
                 group by signal
             """)
-        dateDF["minDate"] = pd.to_datetime(dateDF["minDate"])
-        dateDF["maxDate"] = pd.to_datetime(dateDF["maxDate"])
-        resDict = {}
-        for _, row in dateDF.iterrows():
-            resDict[row["signal"]] = [row["minDate"], row["maxDate"]]
-        return resDict
+        dateDF["minDate"] = dateDF["minDate"].apply(pd.Timestamp)
+        dateDF["maxDate"] = dateDF["maxDate"].apply(pd.Timestamp)
+        return dateDF   # pd.DataFrame(signal minDate maxDate)
 
     def deleteByDate(self, startDate: str, endDate: str) -> None:
         startDate = pd.Timestamp(startDate).strftime("%Y.%m.%d")

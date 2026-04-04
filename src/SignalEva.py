@@ -9,7 +9,7 @@ if project_root not in sys.path:
 from src.entity.Source import Source
 from src.entity.Eva import Eva
 from src.entity.Result import Result,Stats
-from src.utils.utils import split_list, get_splitTradeTime
+from src.utils.utils import split_list, get_splitTradeTime, get_dateDictFromDF
 pd.set_option('display.max_columns', None)
 
 class SignalEva(Eva, Stats):
@@ -40,17 +40,18 @@ class SignalEva(Eva, Stats):
 
         # 1. 对于老信号 -> 一一计算
         if oldSignals:
-            dateDict = SigObj.getDateRangeByFactor(factorList=oldSignals)   # 获取当前结果库中的时间范围
-            if dateDict != {}:
-                for signal in tqdm.tqdm(oldSignals, desc="old signals' eva..."):
-                    currentStartDate, currentEndDate = dateDict[signal]
-                    startDate = currentEndDate + pd.Timedelta(days=1)
-                    endDate = SigObj.endDate
-                    if SigObj.endDate < startDate:  # 说明已经是最新数据了
-                        continue
+            dateDF = SigObj.getDateRangeByFactor(factorList=oldSignals)   # 获取当前结果库中的时间范围
+            dateDict = get_dateDictFromDF(dateDF=dateDF)    # Dict(uniqueMaxDate, List[signal])
+            for date, signalWithMaxDate in tqdm.tqdm(dateDict.items(), total=len(dateDict)):
+                startDate = date + pd.Timedelta(1, "D")
+                endDate = SigObj.endDate
+                if startDate > endDate:  # 说明已经满足了endDate的最新要求
+                    continue
+                signalList_nested = split_list(signalWithMaxDate, k=30)
+                for signalList in tqdm.tqdm(signalList_nested, desc="old signals' eva..."):
                     for callBackDays, afterStatDays in zip(SigObj.callBackDays, SigObj.afterStatDays):
-                        SigObj.eva(startDate=startDate, endDate=endDate, signalList=[signal],
-                                    callBackDays=callBackDays, afterStatDays=afterStatDays)
+                        SigObj.eva(startDate=startDate, endDate=endDate, signalList=signalList,
+                                   callBackDays=callBackDays, afterStatDays=afterStatDays)
 
         # 2.批量计算新信号 -> 插入至数据库
         if newSignals:
