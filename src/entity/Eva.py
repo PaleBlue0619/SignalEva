@@ -27,7 +27,8 @@ class Eva(Result):
             }}while(start_idx < krow)
         }};
         
-        def signalStats(callBackDays, afterStatDays, signalDF){{
+        def signalStats(callBackDays, afterStatDays, signalDF, startDate, endDate){{
+            /* startDate & endDate 为实际需要的时间 */
             // 统计-1
             summaryStats = select symbol, tradeDate, factor, value, ret,
                 callBackDays as `period,
@@ -85,14 +86,15 @@ class Eva(Result):
                 }}
             }}
             summaryStats0 = unpivot(summaryStats, keyColNames=keyColNames,valueColNames=valColNames)
-            InsertData("{self.resultDBName}", "{self.resultTBName}", summaryStats0, 5000000);
+            InsertData("{self.resultDBName}", "{self.resultTBName}", summaryStats0, 1000000);
             undef(`summaryStats0)
             
             // 统计-2: 
             // K日涨跌幅
             for (day in afterStatDays){{
                 // retData prepare
-                update summaryStats set mret = move(ret, -day) context by factor,symbol
+                update summaryStats set mret = move(ret, -day) context by factor,symbol;   // 这里注意如果没有的需要填0
+                update summaryStats set mret = nullFill(mret, 0.0); // 而且必须分开来写两行, 不能写在一起 -> 不然并不能nullFill
                 if (day != 1){{
                     update summaryStats set retKD = mprod(1+mret, day)-1 context by factor,symbol
                 }}else{{
@@ -145,8 +147,9 @@ class Eva(Result):
                 valColNames1 = ["retAvgPos","upNumPos","upRatePos","downNumPos","downRatePos",
                                 "retAvgNeg","upNumNeg","upRateNeg","downNumNeg","downRateNeg"
                                 ]+string(day)
-                summaryStats1 = unpivot(summaryStats, keyColNames=keyColNames1, valueColNames=valColNames1)
-                InsertData("{self.resultDBName}", "{self.resultTBName}", summaryStats1, 5000000);
+                summaryStats1 = select * from unpivot(summaryStats, keyColNames=keyColNames1, valueColNames=valColNames1)
+                                where tradeDate between startDate and endDate
+                InsertData("{self.resultDBName}", "{self.resultTBName}", summaryStats1, 1000000);
             }}
             undef(`summaryStats1)
         }}
@@ -164,7 +167,7 @@ class Eva(Result):
         callBackDays = {callBackDays};
         afterStatDays = {afterStatDays};
         barRetLabelName = "{self.barRetLabelName}";
-        realStartDate = temporalAdd(startDate, -callBackDays, "d");
+        realStartDate = temporalAdd(startDate, -(callBackDays+1), "CFFEX");
         realEndDate = endDate;
         factorDB = "{self.factorDBName}";
         factorTB = "{self.factorTBName}";
@@ -199,5 +202,5 @@ class Eva(Result):
         undef(`labelDF);
         
         // 进行统计 + 插入至指定数据库
-        signalStats(callBackDays, afterStatDays, signalDF);
+        signalStats(callBackDays, afterStatDays, signalDF, startDate, endDate);
         """)

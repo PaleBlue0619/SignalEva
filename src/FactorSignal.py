@@ -41,15 +41,16 @@ class FactorSignal(Eva, Stats):
         # 1. 对于老信号 -> 一一计算
         if oldSignals:
             dateDict = SigObj.getDateRangeByFactor(factorList=oldSignals)   # 获取当前结果库中的时间范围
-            for signal in tqdm.tqdm(oldSignals, desc="old signals' eva..."):
-                currentStartDate, currentEndDate = dateDict[signal]
-                startDate = currentEndDate + pd.Timedelta(days=1)
-                endDate = SigObj.endDate
-                if SigObj.endDate < startDate:  # 说明已经是最新数据了
-                    continue
-                for callBackDays, afterStatDays in zip(SigObj.callBackDays, SigObj.afterStatDays):
-                    SigObj.eva(startDate=startDate, endDate=endDate, signalList=[signal],
-                                callBackDays=callBackDays, afterStatDays=afterStatDays)
+            if dateDict != {}:
+                for signal in tqdm.tqdm(oldSignals, desc="old signals' eva..."):
+                    currentStartDate, currentEndDate = dateDict[signal]
+                    startDate = currentEndDate + pd.Timedelta(days=1)
+                    endDate = SigObj.endDate
+                    if SigObj.endDate < startDate:  # 说明已经是最新数据了
+                        continue
+                    for callBackDays, afterStatDays in zip(SigObj.callBackDays, SigObj.afterStatDays):
+                        SigObj.eva(startDate=startDate, endDate=endDate, signalList=[signal],
+                                    callBackDays=callBackDays, afterStatDays=afterStatDays)
 
         # 2.批量计算新信号 -> 插入至数据库
         if newSignals:
