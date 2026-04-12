@@ -6,7 +6,7 @@
     "symbolCol": "symbol",
     "indicatorCol": "factor",
     "valueCol": "value",
-    "condition": "split(symbol,'.')[0] in ['CF','SR','TA','FG','RM','SM','SF','MA','CY','AP','CJ','UR','SA','PF','PK','SH','PX','A','M','C','B','Y','P','V','JD','FB','PP','CS','EG','RR','EB','PG','LH','LU','FU','RB','WR','BU','HC','SP','SS','AO','BR','SI','LC']"
+    "condition": "split(symbol,'.')[0] in ['A', 'AO', 'AP', 'B', 'BU', 'C', 'CF', 'CJ', 'CS', 'CY', 'EB', 'EG', 'FB', 'FG', 'FU', 'HC', 'I', 'JD', 'JM', 'JR', 'L', 'LG', 'M', 'MA', 'OI', 'P', 'PF', 'PK', 'PP', 'PX', 'RB', 'RI', 'RM', 'RR', 'SA', 'SF', 'SH', 'SI', 'SM', 'SP', 'SR', 'SS', 'TA', 'UR', 'V', 'WR', 'Y']" // ['CF','SR','TA','FG','RM','SM','SF','MA','CY','AP','CJ','UR','SA','PF','PK','SH','PX','A','M','C','B','Y','P','V','JD','FB','PP','CS','EG','RR','EB','PG','LH','LU','FU','RB','WR','BU','HC','SP','SS','AO','BR','SI','LC']"
   },
   "label": {
     "dbName": "dfs://dayLabel",
@@ -16,7 +16,7 @@
     "symbolCol": "cont",
     "indicatorCol": "label",
     "valueCol": "value",
-    "condition": "split(cont, '.')[0] in ['CF','SR','TA','FG','RM','SM','SF','MA','CY','AP','CJ','UR','SA','PF','PK','SH','PX','A','M','C','B','Y','P','V','JD','FB','PP','CS','EG','RR','EB','PG','LH','LU','FU','RB','WR','BU','HC','SP','SS','AO','BR','SI','LC']"
+    "condition": "split(cont, '.')[0] in ['A', 'AO', 'AP', 'B', 'BU', 'C', 'CF', 'CJ', 'CS', 'CY', 'EB', 'EG', 'FB', 'FG', 'FU', 'HC', 'I', 'JD', 'JM', 'JR', 'L', 'LG', 'M', 'MA', 'OI', 'P', 'PF', 'PK', 'PP', 'PX', 'RB', 'RI', 'RM', 'RR', 'SA', 'SF', 'SH', 'SI', 'SM', 'SP', 'SR', 'SS', 'TA', 'UR', 'V', 'WR', 'Y']" // ['CF','SR','TA','FG','RM','SM','SF','MA','CY','AP','CJ','UR','SA','PF','PK','SH','PX','A','M','C','B','Y','P','V','JD','FB','PP','CS','EG','RR','EB','PG','LH','LU','FU','RB','WR','BU','HC','SP','SS','AO','BR','SI','LC']"
   },
   "result": {
     "dbName": "dfs://factorSignal",
