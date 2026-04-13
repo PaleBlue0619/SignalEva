@@ -58,8 +58,8 @@ class Source:
             """)
         else:
             factorDF = self.session.run(f"""
-                select count(*) from loadTable("{self.factorDBName}", "{self.factorTBName}")
-                    group by {self.factorIndicatorCol} as factorName
+                exec distinct({self.factorIndicatorCol}) from loadTable("{self.factorDBName}", "{self.factorTBName}")
+                    // group by {self.factorIndicatorCol} as factorName
             """)
         factorList = factorDF["factorName"].tolist()
         return factorList

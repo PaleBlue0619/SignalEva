@@ -53,9 +53,7 @@ class Result(Source):
         """
         获取当前结果数据库中信号列表
         """
-        signalDF = self.session.run(f"""
-                     select count(*) from loadTable("{self.resultDBName}", "{self.resultTBName}") group by signal
-                 """)
+        signalDF = self.session.run(f"""select count(*) from loadTable("{self.resultDBName}", "{self.resultTBName}") group by signal """)
         return signalDF["signal"].tolist()
 
     def getDateList(self) -> List[pd.Timestamp]:

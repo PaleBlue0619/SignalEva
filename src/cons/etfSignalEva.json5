@@ -1,0 +1,32 @@
+{
+  "factor": {
+    "dbName": "dfs://daySignalEtf",
+    "tbName": "pt",
+    "dateCol": "tradeDate",
+    "symbolCol": "symbol",
+    "indicatorCol": "factor",
+    "valueCol": "value",
+    "condition": ""
+  },
+  "label": {
+    "dbName": "dfs://dayLabel",
+    "tbName": "etfLabel",
+    "dateCol": "tradeDate",
+    "labelDateCol": "minDate",
+    "symbolCol": "symbol",
+    "indicatorCol": "label",
+    "valueCol": "value",
+    "condition": "symbol in etfList"
+  },
+  "result": {
+    "dbName": "dfs://etfSignalEva",
+    "tbName": "pt"
+  },
+  "config": {
+    "startDate": "20200101",
+    "endDate": null,
+    "callBackDays": [120],
+    "afterStatDays": [[1,3,5]],
+    "barRetLabelName": "barRetOTO" // 通过累乘计算区间收益率
+  }
+}

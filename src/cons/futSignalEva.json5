@@ -19,14 +19,14 @@
     "condition": "split(cont, '.')[0] in ['A', 'AO', 'AP', 'B', 'BU', 'C', 'CF', 'CJ', 'CS', 'CY', 'EB', 'EG', 'FB', 'FG', 'FU', 'HC', 'I', 'JD', 'JM', 'JR', 'L', 'LG', 'M', 'MA', 'OI', 'P', 'PF', 'PK', 'PP', 'PX', 'RB', 'RI', 'RM', 'RR', 'SA', 'SF', 'SH', 'SI', 'SM', 'SP', 'SR', 'SS', 'TA', 'UR', 'V', 'WR', 'Y']" // ['CF','SR','TA','FG','RM','SM','SF','MA','CY','AP','CJ','UR','SA','PF','PK','SH','PX','A','M','C','B','Y','P','V','JD','FB','PP','CS','EG','RR','EB','PG','LH','LU','FU','RB','WR','BU','HC','SP','SS','AO','BR','SI','LC']"
   },
   "result": {
-    "dbName": "dfs://factorSignal",
+    "dbName": "dfs://futSignalEva",
     "tbName": "pt"
   },
   "config": {
-    "startDate": "20210101",
+    "startDate": "20200101",
     "endDate": null,
     "callBackDays": [120],
-    "afterStatDays": [[3,5]],
-    "barRetLabelName": "barRet" // 通过累乘计算区间收益率
+    "afterStatDays": [[1,3,5]],
+    "barRetLabelName": "barRetOTO" // 通过累乘计算区间收益率
   }
 }
