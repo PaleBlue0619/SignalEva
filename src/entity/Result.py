@@ -56,6 +56,22 @@ class Result(Source):
         signalDF = self.session.run(f"""select count(*) from loadTable("{self.resultDBName}", "{self.resultTBName}") group by signal """)
         return signalDF["signal"].tolist()
 
+    def getPeriodList(self) -> List[int]:
+        """
+        获取当前结果数据库中有哪些Period
+        """
+        periodDF = self.session.run(f"""
+        select count(*) from loadTable("{self.resultDBName}", "{self.resultTBName}") group by period;
+        """)
+        return periodDF["period"].tolist()
+
+    def getSignalListByPeriod(self, period: int) -> List[str]:
+        """
+        获取当前结果数据库中给定period的信号列表
+        """
+        signalDF = self.session.run(f"""select count(*) from loadTable("{self.resultDBName}", "{self.resultTBName}") where period == {period} group by signal """)
+        return signalDF["signal"].tolist()
+
     def getDateList(self) -> List[pd.Timestamp]:
         """
         获取当前库内所有时间, 返回列表
@@ -74,7 +90,7 @@ class Result(Source):
         dateList = [pd.Timestamp(i) for i in factorDF["tradeDate"].tolist()]
         return dateList
 
-    def getDateRangeByFactor(self, factorList: List[str] = None) -> pd.DataFrame:
+    def getDateRangeByFactor(self, period: int, factorList: List[str] = None) -> pd.DataFrame:
         """
         查看当前因子的起始时间, 返回每个因子起始时间组成的字典
         :param factorList:
@@ -85,40 +101,41 @@ class Result(Source):
             dateDF = self.session.run(f"""
             select min(tradeDate) as minDate, max(tradeDate) as maxDate 
                 from loadTable("{self.resultDBName}","{self.resultTBName}")
+                where period == {period}
                 group by signal
             """)
         else:
             dateDF = self.session.run(f"""
             select min(tradeDate) as minDate, max(tradeDate) as maxDate 
                 from loadTable("{self.resultDBName}","{self.resultTBName}")
-                where signal in {factorList}
+                where period == {period} and signal in {factorList}
                 group by signal
             """)
         dateDF["minDate"] = dateDF["minDate"].apply(pd.Timestamp)
         dateDF["maxDate"] = dateDF["maxDate"].apply(pd.Timestamp)
         return dateDF   # pd.DataFrame(signal minDate maxDate)
 
-    def deleteByDate(self, startDate: str, endDate: str) -> None:
+    def deleteByDate(self, period: int, startDate: str, endDate: str) -> None:
         startDate = pd.Timestamp(startDate).strftime("%Y.%m.%d")
         endDate = pd.Timestamp(endDate).strftime("%Y.%m.%d")
         self.session.run(f"""
-        delete from loadTable("{self.resultDBName}","{self.resultTBName}") where tradeDate between {startDate} and {endDate}
+        delete from loadTable("{self.resultDBName}","{self.resultTBName}") where period = {period} and (tradeDate between {startDate} and {endDate})
         """)
 
-    def deleteByFactorList(self, factorList: List[str]) -> None:
+    def deleteByFactorList(self, period: int, factorList: List[str]) -> None:
         self.session.upload({"factorList": factorList})
         self.session.run(f"""
-        delete from loadTable("{self.resultDBName}","{self.resultTBName}") where signal in factorList
+        delete from loadTable("{self.resultDBName}","{self.resultTBName}") where period = {period} and signal in factorList
         """)
 
-    def deleteByDateAndFactorList(self, startDate: str, endDate: str, factorList: List[str]) -> None:
+    def deleteByDateAndFactorList(self, period: int, startDate: str, endDate: str, factorList: List[str]) -> None:
         startDate = pd.Timestamp(startDate).strftime("%Y.%m.%d")
         endDate = pd.Timestamp(endDate).strftime("%Y.%m.%d")
         self.session.upload({"factorList": factorList})
         self.session.run(f"""
         startDate = {startDate}
         endDate = {endDate}
-        delete from loadTable("{self.resultDBName}", "{self.resultTBName}") where signal in factorList and (tradeDate between startDate and endDate)
+        delete from loadTable("{self.resultDBName}", "{self.resultTBName}") where period = {period} and signal in factorList and (tradeDate between startDate and endDate)
         """)
 
 class Stats(Result):    # for SignalPlot
@@ -137,8 +154,8 @@ class Stats(Result):    # for SignalPlot
         endDate = {endDate}
         callBackPeriod = {callBackPeriod}
         signalStr = "{signalStr}"
-        resultDB = "dfs://factorSignal"
-        resultTB = "pt"
+        resultDB = "{self.resultDBName}"
+        resultTB = "{self.resultTBName}"
         afterStatDays = {afterStatDays}
         resultDict = dict(SYMBOL, ANY);
         
@@ -187,8 +204,8 @@ class Stats(Result):    # for SignalPlot
         endDate = {endDate}
         callBackPeriod = {callBackPeriod}
         symbolStr = "{symbolStr}"
-        resultDB = "dfs://factorSignal"
-        resultTB = "pt"
+        resultDB = "{self.resultDBName}"
+        resultTB = "{self.resultTBName}"
         afterStatDays = {afterStatDays}
         resultDict = dict(SYMBOL, ANY);
 
